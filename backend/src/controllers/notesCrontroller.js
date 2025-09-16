@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Note from "../models/Note.js";
 
 export async function getAllNotes (req,res ){
@@ -67,16 +68,25 @@ export async function updateANote (req,res) {
    }
    
 }
+export async function deleteANote(req, res) {
+  try {
+    const { id } = req.params;
 
-export async function deleteANote (req,res) {
-   try {
-           const {title,content} = req.body;
-           const deleteNote = await Note.findByIdAndDelete(req.params.id,{title,content},{new:true})
-            if(!deleteNote) return res.status(404).json({message:"Note not found"})
-      res.status(200).json(deleteNote);
-   } catch (error) {
-        console.error("Error in deleteANote controller",error);
-      res.status(500).json({message:"Internal Server error"})
-   }
-   res.status(200).json({message:"You just deleted a note successfully!"});
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: "Invalid note id" });
+    }
+
+    const deletedNote = await Note.findByIdAndDelete(id);
+
+    if (!deletedNote) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    // choose one response and RETURN
+    return res.status(200).json({ message: "Note deleted", note: deletedNote });
+    // or: return res.status(204).end();
+  } catch (error) {
+    console.error("Error in deleteANote controller", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
 }
